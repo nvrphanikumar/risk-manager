@@ -278,6 +278,17 @@ function setupNavigation() {
   if (accountFilter) accountFilter.addEventListener('change', filterAndRenderTable);
   if (sectorFilter) sectorFilter.addEventListener('change', filterAndRenderTable);
   if (statusFilter) statusFilter.addEventListener('change', filterAndRenderTable);
+
+  // Summary table filters
+  const summarySearch = document.getElementById('search-summary');
+  const summarySectorFilter = document.getElementById('filter-summary-sector');
+  
+  if (summarySearch) {
+    summarySearch.addEventListener('input', renderSummaryTable);
+  }
+  if (summarySectorFilter) {
+    summarySectorFilter.addEventListener('change', renderSummaryTable);
+  }
 }
 
 // Drag & Drop CSV Upload
@@ -432,7 +443,14 @@ function processCSV(text) {
       sector: rawObj['sector'] || 'Other',
       beta: parseNumber(rawObj['beta']) || 1.0,
       riskTrade: rawObj['risk/trade'] || '1%',
-      riskReward: parseNumber(rawObj['risk:reward'])
+      riskReward: parseNumber(rawObj['risk:reward']),
+      // Weekly performance tracking
+      monthEndPct: parsePercent(rawObj['month end %'] || '0%'),
+      week1Pct: parsePercent(rawObj['week1 %'] || rawObj['week1%'] || '0%'),
+      week2Pct: parsePercent(rawObj['week2'] || rawObj['week2 %'] || rawObj['week2%'] || '0%'),
+      week3Pct: parsePercent(rawObj['week3'] || rawObj['week3 %'] || rawObj['week3%'] || '0%'),
+      week4Pct: parsePercent(rawObj['week4'] || rawObj['week4 %'] || rawObj['week4%'] || '0%'),
+      week5Pct: parsePercent(rawObj['week5'] || rawObj['week5 %'] || rawObj['week5%'] || '0%')
     };
 
     // Calculate trailing stop if it was missing but we have stopLossPercent
@@ -464,6 +482,8 @@ function processCSV(text) {
   // Render everything
   hideLandingZone();
   updateHeaderStats();
+  renderSummaryTable();
+  renderWeeklyTable();
   renderDashboardCharts();
   populateFilters();
   filterAndRenderTable();
@@ -835,6 +855,7 @@ function renderDashboardCharts() {
 function populateFilters() {
   const accountFilter = document.getElementById('filter-account');
   const sectorFilter = document.getElementById('filter-sector');
+  const summarySectorFilter = document.getElementById('filter-summary-sector');
 
   if (!accountFilter || !sectorFilter) return;
 
@@ -850,6 +871,9 @@ function populateFilters() {
   // Clear existing items except "all"
   accountFilter.innerHTML = '<option value="all">All Accounts</option>';
   sectorFilter.innerHTML = '<option value="all">All Sectors</option>';
+  if (summarySectorFilter) {
+    summarySectorFilter.innerHTML = '<option value="all">All Sectors</option>';
+  }
 
   accounts.forEach(acc => {
     if (acc === 'all') return;
@@ -859,6 +883,9 @@ function populateFilters() {
   sectors.forEach(sec => {
     if (sec === 'all') return;
     sectorFilter.innerHTML += `<option value="${sec}">${sec}</option>`;
+    if (summarySectorFilter) {
+      summarySectorFilter.innerHTML += `<option value="${sec}">${sec}</option>`;
+    }
   });
 }
 
@@ -949,6 +976,261 @@ function filterAndRenderTable() {
       </tr>
     `;
   }).join('');
+}
+
+// Render aggregated positions summary table
+function renderSummaryTable() {
+  const tbody = document.getElementById('summary-table-body');
+  if (!tbody) return;
+
+  const searchQuery = (document.getElementById('search-summary')?.value || '').toUpperCase();
+  const sectorVal = document.getElementById('filter-summary-sector')?.value || 'all';
+
+  let filtered = appState.aggregated || [];
+
+  // Apply filters
+  filtered = filtered.filter(g => {
+    const matchesSearch = g.symbol.includes(searchQuery) || g.sector.toUpperCase().includes(searchQuery);
+    const matchesSector = (sectorVal === 'all' || g.sector === sectorVal);
+    return matchesSearch && matchesSector;
+  });
+
+  // Sort by size descending
+  filtered.sort((a, b) => b.currentValue - a.currentValue);
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">No positions match your filters.</td></tr>`;
+    return;
+  }
+
+  // Calculate daily ROI from individual tranches
+  const getDailyRoi = (symbol) => {
+    const tranches = appState.tranches.filter(t => t.symbol === symbol);
+    let totalDailyPnl = 0;
+    tranches.forEach(t => {
+      // Extract daily change from pnlPercent or estimate from P&L
+      totalDailyPnl += (t.pnlDollar / t.currentSize * 0.5) || 0; // conservative estimate
+    });
+    return totalDailyPnl;
+  };
+
+  tbody.innerHTML = filtered.map(g => {
+    const portPct = (g.currentValue / appState.portfolioValue * 100).toFixed(2);
+    const pnlSign = g.pnlDollar >= 0 ? '+' : '';
+    const pnlClass = g.pnlDollar >= 0 ? 'positive' : 'negative';
+    const roiClass = g.pnlPercent >= 0 ? 'positive' : 'negative';
+    
+    // Determine action
+    let actionLabel = 'Hold';
+    let actionClass = 'action-hold';
+    
+    if (g.stopBreached) {
+      actionLabel = '⚠ Sell';
+      actionClass = 'action-trim';
+    } else if (g.stopWarning) {
+      actionLabel = '⚠ Trim';
+      actionClass = 'action-trim';
+    } else if (portPct > 15) {
+      actionLabel = '⬇ Trim (Oversized)';
+      actionClass = 'action-trim';
+    } else if (portPct < 2 && g.pnlPercent > 20) {
+      actionLabel = '⬆ Scale Up';
+      actionClass = 'action-scale';
+    } else if (portPct < 1 && g.pnlPercent > 10) {
+      actionLabel = '➕ Add';
+      actionClass = 'action-add';
+    }
+
+    // Daily ROI calculation
+    const dailyRoi = getDailyRoi(g.symbol);
+    const dailyRoiClass = dailyRoi >= 0 ? 'positive' : 'negative';
+    const dailyRoiSign = dailyRoi >= 0 ? '+' : '';
+
+    return `
+      <tr>
+        <td class="col-symbol">
+          <div class="summary-symbol">
+            <div class="summary-symbol-name">${g.symbol}</div>
+            <div class="summary-symbol-meta">${g.tranchesCount} ${g.tranchesCount === 1 ? 'tranche' : 'tranches'}</div>
+          </div>
+        </td>
+        <td class="col-sector">
+          <span class="sector-badge">${g.sector}</span>
+        </td>
+        <td class="col-roi-day">
+          <div class="roi-daily">
+            <div class="roi-amount ${dailyRoiClass}">${dailyRoiSign}$${Math.abs(dailyRoi).toFixed(0)}/day</div>
+            <div class="roi-pct">${g.pnlPercent > 0 ? '+' : ''}${g.pnlPercent.toFixed(1)}%</div>
+          </div>
+        </td>
+        <td class="col-port-pct">
+          <div class="port-pct">${portPct}%</div>
+        </td>
+        <td class="col-size">
+          <div class="size-value">$${g.currentValue.toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
+        </td>
+        <td class="col-pnl">
+          <div class="pnl-value">
+            <div class="pnl-amount ${pnlClass}">${pnlSign}$${Math.abs(g.pnlDollar).toLocaleString('en-US', {maximumFractionDigits: 0})}</div>
+            <div class="pnl-pct">${pnlSign}${g.pnlPercent.toFixed(1)}%</div>
+          </div>
+        </td>
+        <td class="col-action">
+          <span class="action-badge ${actionClass}">${actionLabel}</span>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// Render weekly performance table
+function renderWeeklyTable() {
+  const tbody = document.getElementById('weekly-table-body');
+  if (!tbody || !appState.aggregated) return;
+
+  // Sort aggregated positions by size
+  const sorted = [...appState.aggregated].sort((a, b) => b.currentValue - a.currentValue);
+
+  if (sorted.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 3rem;">No positions available for weekly tracking.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = sorted.map(g => {
+    // Extract weekly percentages from CSV data
+    // These are stored in the aggregated tranches data
+    const getWeeklyData = (symbol) => {
+      const tranches = appState.tranches.filter(t => t.symbol === symbol);
+      if (tranches.length === 0) return {};
+      
+      const t = tranches[0]; // Use first tranche as reference
+      return {
+        week1: parsePercent(t.week1Pct || 0),
+        week2: parsePercent(t.week2Pct || 0),
+        week3: parsePercent(t.week3Pct || 0),
+        week4: parsePercent(t.week4Pct || 0),
+        week5: parsePercent(t.week5Pct || 0),
+        monthEnd: parsePercent(t.monthEndPct || 0)
+      };
+    };
+
+    const weekData = getWeeklyData(g.symbol);
+    
+    const formatWeekPct = (pct) => {
+      const val = pct || 0;
+      const sign = val >= 0 ? '+' : '';
+      const className = val > 0 ? 'positive' : val < 0 ? 'negative' : 'neutral';
+      return `<span class="week-pct ${className}">${sign}${val.toFixed(1)}%</span>`;
+    };
+
+    return `
+      <tr>
+        <td class="col-symbol">
+          <div class="week-symbol">
+            <div class="week-symbol-name">${g.symbol}</div>
+            <div class="week-symbol-count">${g.tranchesCount} ${g.tranchesCount === 1 ? 'tranche' : 'tranches'}</div>
+          </div>
+        </td>
+        <td class="col-sector">
+          <span class="week-sector-badge">${g.sector}</span>
+        </td>
+        <td class="col-month-end">
+          ${formatWeekPct(weekData.monthEnd)}
+        </td>
+        <td class="col-week1">
+          ${formatWeekPct(weekData.week1)}
+        </td>
+        <td class="col-week2">
+          ${formatWeekPct(weekData.week2)}
+        </td>
+        <td class="col-week3">
+          ${formatWeekPct(weekData.week3)}
+        </td>
+        <td class="col-week4">
+          ${formatWeekPct(weekData.week4)}
+        </td>
+        <td class="col-week5">
+          ${formatWeekPct(weekData.week5)}
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  // Add sorting functionality
+  setupWeeklyTableSorting();
+}
+
+// Weekly table sorting
+let weeklySort = { column: 'week5', direction: 'desc' };
+
+function setupWeeklyTableSorting() {
+  const headers = document.querySelectorAll('.weekly-performance-table th.sortable');
+  
+  headers.forEach(header => {
+    header.addEventListener('click', () => {
+      const column = header.dataset.sort;
+      
+      // Toggle sort direction if same column
+      if (weeklySort.column === column) {
+        weeklySort.direction = weeklySort.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        weeklySort.column = column;
+        weeklySort.direction = 'desc';
+      }
+      
+      // Update header visuals
+      document.querySelectorAll('.weekly-performance-table th.sortable').forEach(h => {
+        h.classList.remove('asc', 'desc');
+      });
+      header.classList.add(weeklySort.direction);
+      
+      // Sort and re-render
+      sortAndRenderWeekly();
+    });
+  });
+}
+
+function sortAndRenderWeekly() {
+  const tbody = document.getElementById('weekly-table-body');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  
+  rows.sort((aRow, bRow) => {
+    let aVal, bVal;
+    const colMap = {
+      symbol: 0,
+      sector: 1,
+      month_end: 2,
+      week1: 3,
+      week2: 4,
+      week3: 5,
+      week4: 6,
+      week5: 7
+    };
+    
+    const cellIndex = colMap[weeklySort.column] || 0;
+    const aCell = aRow.children[cellIndex];
+    const bCell = bRow.children[cellIndex];
+    
+    if (!aCell || !bCell) return 0;
+    
+    const aText = aCell.textContent.trim();
+    const bText = bCell.textContent.trim();
+    
+    // Try to parse as numbers
+    aVal = parseFloat(aText) || aText;
+    bVal = parseFloat(bText) || bText;
+    
+    if (typeof aVal === 'number' && typeof bVal === 'number') {
+      return weeklySort.direction === 'asc' ? aVal - bVal : bVal - aVal;
+    } else {
+      return weeklySort.direction === 'asc' 
+        ? aText.localeCompare(bText)
+        : bText.localeCompare(aText);
+    }
+  });
+  
+  tbody.innerHTML = rows.map(row => row.outerHTML).join('');
+  setupWeeklyTableSorting();
 }
 
 // Generate context-aware financial news headlines based on user's portfolio

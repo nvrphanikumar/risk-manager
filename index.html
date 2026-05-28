@@ -42,6 +42,16 @@
       
       <ul class="nav-menu">
         <li class="nav-item active">
+          <button data-tab="summary">
+            <i data-lucide="bar-chart-2"></i> Positions Summary
+          </button>
+        </li>
+        <li class="nav-item">
+          <button data-tab="weekly">
+            <i data-lucide="calendar"></i> Weekly Performance
+          </button>
+        </li>
+        <li class="nav-item">
           <button data-tab="dashboard">
             <i data-lucide="layout-dashboard"></i> Executive Summary
           </button>
@@ -180,8 +190,82 @@
 
         <!-- Dynamic Tab Contents -->
 
-        <!-- TAB 1: EXECUTIVE SUMMARY -->
-        <div id="dashboard" class="tab-pane active">
+        <!-- TAB 0: POSITIONS SUMMARY (Top-level aggregated view) -->
+        <div id="summary" class="tab-pane active">
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h2><i data-lucide="bar-chart-2" style="color: var(--accent-cyan); width: 18px; height: 18px;"></i> Portfolio Positions Summary</h2>
+              <span class="subtitle">Aggregated by symbol with daily returns & portfolio weighting</span>
+            </div>
+
+            <!-- Summary Table Filters -->
+            <div class="table-filters" style="margin-bottom: 1.25rem;">
+              <div class="search-input-wrapper">
+                <i data-lucide="search" style="width: 16px; height: 16px;"></i>
+                <input type="text" id="search-summary" placeholder="Search by Symbol or Sector...">
+              </div>
+              <div class="filter-selects">
+                <select id="filter-summary-sector">
+                  <option value="all">All Sectors</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Summary Table -->
+            <div class="table-wrapper positions-summary-wrapper">
+              <table class="positions-summary-table">
+                <thead>
+                  <tr>
+                    <th class="col-symbol">SYMBOL</th>
+                    <th class="col-sector">SECTOR</th>
+                    <th class="col-roi-day">ROI/DAY</th>
+                    <th class="col-port-pct">% PORT</th>
+                    <th class="col-size">SIZE $</th>
+                    <th class="col-pnl">P&L $</th>
+                    <th class="col-action">ACTION</th>
+                  </tr>
+                </thead>
+                <tbody id="summary-table-body">
+                  <!-- Dynamically populated via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 1: WEEKLY PERFORMANCE -->
+        <div id="weekly" class="tab-pane">
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h2><i data-lucide="calendar" style="color: var(--accent-cyan); width: 18px; height: 18px;"></i> Weekly Performance Tracking</h2>
+              <span class="subtitle" style="color: var(--text-muted); font-size: 0.9rem;">Click column headers to sort • Performance by week</span>
+            </div>
+
+            <!-- Weekly Table -->
+            <div class="table-wrapper weekly-performance-wrapper">
+              <table class="weekly-performance-table">
+                <thead>
+                  <tr>
+                    <th class="col-symbol sortable" data-sort="symbol">SYMBOL</th>
+                    <th class="col-sector sortable" data-sort="sector">SECTOR</th>
+                    <th class="col-month-end sortable" data-sort="month_end">MONTH END %</th>
+                    <th class="col-week1 sortable" data-sort="week1">WEEK 1 %</th>
+                    <th class="col-week2 sortable" data-sort="week2">WEEK 2 %</th>
+                    <th class="col-week3 sortable" data-sort="week3">WEEK 3 %</th>
+                    <th class="col-week4 sortable" data-sort="week4">WEEK 4 %</th>
+                    <th class="col-week5 sortable" data-sort="week5">WEEK 5 %</th>
+                  </tr>
+                </thead>
+                <tbody id="weekly-table-body">
+                  <!-- Dynamically populated via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: EXECUTIVE SUMMARY -->
+        <div id="dashboard" class="tab-pane">
           
           <!-- AI Risk Manager Box -->
           <div class="risk-manager-box">

@@ -3,10 +3,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --bg-primary: #080c14;
-  --bg-secondary: #0f172a;
-  --bg-glass: rgba(15, 23, 42, 0.65);
-  --bg-glass-hover: rgba(30, 41, 59, 0.75);
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --bg-glass: rgba(10, 10, 10, 0.65);
+  --bg-glass-hover: rgba(25, 25, 25, 0.75);
   --border-glass: rgba(255, 255, 255, 0.06);
   --border-glass-focus: rgba(6, 182, 212, 0.4);
   
@@ -45,9 +45,9 @@
 body {
   background-color: var(--bg-primary);
   background-image: 
-    radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.08) 0px, transparent 50%),
-    radial-gradient(at 50% 0%, rgba(6, 182, 212, 0.06) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.02) 0px, transparent 50%),
+    radial-gradient(at 50% 0%, rgba(6, 182, 212, 0.02) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.02) 0px, transparent 50%);
   color: var(--text-primary);
   font-family: var(--font-body);
   min-height: 100vh;
@@ -64,11 +64,11 @@ body {
   background: var(--bg-primary);
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #333333;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #555555;
 }
 
 /* Layout Grid */
@@ -302,7 +302,7 @@ body {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: conic-gradient(var(--accent-cyan) 3.6deg, #1e293b 0deg);
+  background: conic-gradient(var(--accent-cyan) 3.6deg, #1a1a1a 0deg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -792,7 +792,7 @@ body {
 .control-group input[type="range"] {
   width: 100%;
   height: 6px;
-  background: #1e293b;
+  background: #1a1a1a;
   border-radius: 3px;
   outline: none;
   accent-color: var(--accent-cyan);
@@ -1075,4 +1075,381 @@ body {
 .ticker-change {
   font-weight: 600;
   font-size: 0.75rem;
+}
+
+/* Positions Summary Table */
+.positions-summary-wrapper {
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-glass);
+}
+
+.positions-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.positions-summary-table thead {
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 2px solid var(--border-glass);
+}
+
+.positions-summary-table th {
+  padding: 1rem 1.25rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.positions-summary-table td {
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.positions-summary-table tbody tr {
+  transition: background-color var(--transition-fast);
+}
+
+.positions-summary-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.positions-summary-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Column Alignments */
+.col-symbol, .col-sector { text-align: left; }
+.col-roi-day, .col-port-pct, .col-size, .col-pnl { text-align: right; }
+.col-action { text-align: center; }
+
+/* Weekly Performance Table */
+.weekly-performance-wrapper {
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-glass);
+}
+
+.weekly-performance-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.weekly-performance-table thead {
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 2px solid var(--border-glass);
+  position: sticky;
+  top: 0;
+}
+
+.weekly-performance-table th {
+  padding: 1rem 1.25rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.weekly-performance-table th.sortable {
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.weekly-performance-table th.sortable:hover {
+  background-color: rgba(6, 182, 212, 0.1);
+}
+
+.weekly-performance-table th.sortable::after {
+  content: ' ⇅';
+  opacity: 0.5;
+  font-size: 0.8rem;
+}
+
+.weekly-performance-table th.sortable.asc::after {
+  content: ' ↓';
+  opacity: 1;
+  color: var(--accent-cyan);
+}
+
+.weekly-performance-table th.sortable.desc::after {
+  content: ' ↑';
+  opacity: 1;
+  color: var(--accent-cyan);
+}
+
+.weekly-performance-table td {
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.weekly-performance-table tbody tr {
+  transition: background-color var(--transition-fast);
+}
+
+.weekly-performance-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.weekly-performance-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Weekly Column Alignments */
+.col-symbol { text-align: left; width: 12%; }
+.col-sector { text-align: left; width: 15%; }
+.col-month-end, .col-week1, .col-week2, .col-week3, .col-week4, .col-week5 { 
+  text-align: right;
+  width: 13%;
+}
+
+/* Weekly Data Cells */
+.week-symbol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.week-symbol-name {
+  font-weight: 700;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  color: #fff;
+}
+
+.week-symbol-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.week-sector-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  background: rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  color: var(--accent-cyan);
+  font-size: 0.85rem;
+  font-weight: 500;
+  width: fit-content;
+}
+
+.week-pct {
+  font-weight: 600;
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+}
+
+.week-pct.positive {
+  color: var(--color-success);
+}
+
+.week-pct.negative {
+  color: var(--color-danger);
+}
+
+.week-pct.neutral {
+  color: var(--text-secondary);
+}
+
+@media (max-width: 1200px) {
+  .weekly-performance-table td,
+  .weekly-performance-table th {
+    padding: 0.875rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .weekly-performance-table {
+    font-size: 0.8rem;
+  }
+
+  .weekly-performance-table td,
+  .weekly-performance-table th {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .week-symbol-name {
+    font-size: 0.9rem;
+  }
+
+  .col-symbol { width: 15%; }
+  .col-sector { width: 18%; }
+  .col-month-end, .col-week1, .col-week2, .col-week3, .col-week4, .col-week5 { 
+    width: 11%;
+  }
+}
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.summary-symbol-name {
+  font-weight: 700;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  color: #fff;
+}
+
+.summary-symbol-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Sector Badge */
+.sector-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  background: rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  color: var(--accent-cyan);
+  font-size: 0.85rem;
+  font-weight: 500;
+  width: fit-content;
+}
+
+/* Daily ROI Display */
+.roi-daily {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  font-family: var(--font-heading);
+}
+
+.roi-amount {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.roi-amount.positive { color: var(--color-success); }
+.roi-amount.negative { color: var(--color-danger); }
+
+.roi-pct {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Portfolio Percentage */
+.port-pct {
+  font-weight: 600;
+  color: var(--accent-cyan);
+  font-family: var(--font-heading);
+}
+
+/* Position Size */
+.size-value {
+  font-weight: 600;
+  font-family: var(--font-heading);
+  color: var(--text-primary);
+}
+
+/* P&L Display */
+.pnl-value {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  font-family: var(--font-heading);
+}
+
+.pnl-amount {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.pnl-amount.positive {
+  color: var(--color-success);
+}
+
+.pnl-amount.negative {
+  color: var(--color-danger);
+}
+
+.pnl-pct {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Action Badges */
+.action-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  border: 1px solid;
+}
+
+.action-trim {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.action-scale {
+  background: rgba(16, 185, 129, 0.1);
+  color: #86efac;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.action-add {
+  background: rgba(34, 211, 238, 0.1);
+  color: #67e8f9;
+  border-color: rgba(34, 211, 238, 0.3);
+}
+
+.action-hold {
+  background: rgba(148, 163, 184, 0.1);
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 1200px) {
+  .positions-summary-table td,
+  .positions-summary-table th {
+    padding: 0.875rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .positions-summary-table {
+    font-size: 0.8rem;
+  }
+
+  .positions-summary-table td,
+  .positions-summary-table th {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .summary-symbol-name {
+    font-size: 0.9rem;
+  }
+
+  .col-symbol, .col-sector { text-align: left; }
+  .col-roi-day, .col-port-pct, .col-size, .col-pnl { text-align: right; font-size: 0.85rem; }
 }
