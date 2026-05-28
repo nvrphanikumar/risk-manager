@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum Risk Manager - Portfolio Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <!-- Market Ticker Banner -->
+  <div class="ticker-banner" style="background: rgba(15, 23, 42, 0.9); border-bottom: 1px solid var(--border-glass); padding: 0.5rem 2.5rem; font-size: 0.8rem; display: flex; gap: 2rem; overflow-x: auto; white-space: nowrap; z-index: 100;">
+    <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-family: var(--font-heading);">
+      <i data-lucide="globe" style="width: 14px; height: 14px; color: var(--accent-cyan);"></i> Market Ticker:
+    </div>
+    <div id="ticker-SPY" style="display: flex; gap: 0.5rem; align-items: center;">
+      <span class="ticker-symbol">SPY</span><span class="ticker-price">$512.45</span><span class="ticker-change color-success">+0.42%</span>
+    </div>
+    <div id="ticker-QQQ" style="display: flex; gap: 0.5rem; align-items: center;">
+      <span class="ticker-symbol">QQQ</span><span class="ticker-price">$438.90</span><span class="ticker-change color-success">+0.68%</span>
+    </div>
+    <div id="ticker-IWM" style="display: flex; gap: 0.5rem; align-items: center;">
+      <span class="ticker-symbol">IWM</span><span class="ticker-price">$202.10</span><span class="ticker-change color-danger">-0.15%</span>
+    </div>
+    <div id="ticker-DIA" style="display: flex; gap: 0.5rem; align-items: center;">
+      <span class="ticker-symbol">DIA</span><span class="ticker-price">$391.20</span><span class="ticker-change color-success">+0.10%</span>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="logo-container">
+        <i data-lucide="shield-alert" class="logo-icon" style="width: 28px; height: 28px;"></i>
+        <span class="logo-text">ANTIGRAVITY</span>
+      </div>
+      
+      <ul class="nav-menu">
+        <li class="nav-item active">
+          <button data-tab="dashboard">
+            <i data-lucide="layout-dashboard"></i> Executive Summary
+          </button>
+        </li>
+        <li class="nav-item">
+          <button data-tab="positions">
+            <i data-lucide="table"></i> Positions Analyzer
+          </button>
+        </li>
+        <li class="nav-item">
+          <button data-tab="news">
+            <i data-lucide="newspaper"></i> News & Sentiment
+          </button>
+        </li>
+        <li class="nav-item">
+          <button data-tab="simulator">
+            <i data-lucide="sliders"></i> Stress Simulator
+          </button>
+        </li>
+      </ul>
+
+      <!-- User Profile Summary (Sidebar Footer) -->
+      <div style="border-top: 1px solid var(--border-glass); padding-top: 1.5rem; margin-top: auto; display: flex; align-items: center; gap: 0.75rem;">
+        <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); display: flex; align-items: center; justify-content: center; font-family: var(--font-heading); font-weight: 700;">
+          PM
+        </div>
+        <div>
+          <div style="font-size: 0.85rem; font-weight: 600;">Portfolio Owner</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Beta-Trader Account</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Dashboard Body -->
+    <main class="main-content">
+      
+      <!-- Top header and CSV Uploader -->
+      <header class="top-header">
+        <div class="header-title">
+          <h1 id="tab-title-text">Risk Control Center</h1>
+          <p id="tab-subtitle-text">Synthesizing real-time portfolio exposure, market trends, and stop-loss metrics.</p>
+        </div>
+        <div class="header-actions">
+          <button id="gsheet-header-sync-btn" class="file-upload-btn" style="border-color: var(--accent-purple); color: var(--accent-purple); display: none;">
+            <i data-lucide="refresh-cw"></i> Sync Google Sheet
+          </button>
+          <label for="csv-file-input" class="file-upload-btn">
+            <i data-lucide="upload"></i> Update Positions CSV
+          </label>
+          <input type="file" id="csv-file-input" accept=".csv">
+        </div>
+      </header>
+
+      <!-- CSV Landing Zone (Shows initially if no data) -->
+      <section id="landing-section" style="display: none;">
+        <div class="landing-zone" id="landing-zone">
+          <i data-lucide="file-spreadsheet" class="landing-icon" style="width: 64px; height: 64px;"></i>
+          <h2 class="landing-title">Load Portfolio CSV</h2>
+          <p class="landing-desc">Drag and drop your "Positions - Portfolio.csv" file here or click to browse. The application will compute risk metrics instantly.</p>
+          <button class="btn" style="margin-bottom: 1.5rem;">Select CSV File</button>
+          
+          <div style="border-top: 1px solid var(--border-glass); padding-top: 1.5rem; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 0.75rem;" onclick="event.stopPropagation();">
+            <div style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Or Sync Google Sheet Directly</div>
+            <div style="display: flex; gap: 0.5rem; width: 100%;">
+              <input type="text" id="gsheet-url-input" placeholder="Paste published Google Sheets CSV URL here..." style="flex-grow: 1; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-glass); border-radius: 0.5rem; padding: 0.6rem; color: #fff; font-size: 0.85rem; outline: none; transition: border var(--transition-fast);">
+              <button class="btn" id="gsheet-sync-btn" style="padding: 0.6rem 1.25rem; font-size: 0.85rem; box-shadow: none;">Sync</button>
+            </div>
+            <a href="#" id="gsheet-instructions-btn" style="font-size: 0.75rem; color: var(--accent-cyan); text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.25rem;">
+              How do I get a Google Sheet CSV link? <i data-lucide="help-circle" style="width: 14px; height: 14px;"></i>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dashboard Wrapper (Hidden until data processed) -->
+      <div id="dashboard-wrapper">
+        
+        <!-- High-level Metric Overview Cards -->
+        <section class="summary-cards-grid">
+          <!-- Total Portfolio Value -->
+          <div class="summary-card">
+            <div class="card-icon-wrapper cyan">
+              <i data-lucide="wallet"></i>
+            </div>
+            <div class="card-details">
+              <h3>Portfolio Value</h3>
+              <div class="value" id="stat-portfolio-val">$0.00</div>
+              <div class="subtext">Aggregate size of active tranches</div>
+            </div>
+          </div>
+
+          <!-- Total P&L -->
+          <div class="summary-card">
+            <div class="card-icon-wrapper success" id="pnl-card-wrapper">
+              <i data-lucide="trending-up"></i>
+            </div>
+            <div class="card-details">
+              <h3>Total Return</h3>
+              <div class="value" id="stat-total-pnl">$0.00 (0.00%)</div>
+              <div class="subtext">
+                Combined P&L 
+                <span id="pnl-trend" class="trend-badge">
+                  <i data-lucide="trending-up"></i>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Positions Count -->
+          <div class="summary-card">
+            <div class="card-icon-wrapper purple">
+              <i data-lucide="pie-chart"></i>
+            </div>
+            <div class="card-details">
+              <h3>Active Tranches</h3>
+              <div class="value" id="stat-active-positions">0</div>
+              <div class="subtext" id="stat-active-positions-sub">0 Unique Symbols</div>
+            </div>
+          </div>
+
+          <!-- Portfolio Health Score -->
+          <div class="summary-card">
+            <div class="circular-progress" id="health-progress">
+              <div class="circular-value" id="health-score-val">100</div>
+            </div>
+            <div class="card-details" style="padding-left: 0.5rem;">
+              <h3>Risk Health</h3>
+              <div class="value" style="font-size: 1.2rem; font-family: var(--font-heading);">Score / 100</div>
+              <div class="subtext">Based on stop losses, sizing & concentration</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Dynamic Tab Contents -->
+
+        <!-- TAB 1: EXECUTIVE SUMMARY -->
+        <div id="dashboard" class="tab-pane active">
+          
+          <!-- AI Risk Manager Box -->
+          <div class="risk-manager-box">
+            <div class="risk-manager-header">
+              <div class="risk-manager-title">
+                <i data-lucide="bot" style="color: var(--accent-cyan); width: 22px; height: 22px;"></i>
+                <h2>Risk Manager's Daily Action Items</h2>
+              </div>
+              <span class="bot-badge">AI Assistant</span>
+            </div>
+            <div class="risk-manager-body" id="recommendations-container">
+              <!-- Dynamically populated via JS -->
+              <div class="app-loader">
+                <div class="spinner"></div>
+                <p>Generating portfolio recommendations...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Layout -->
+          <div class="dashboard-grid">
+            <!-- Sector Weights -->
+            <div class="dashboard-card">
+              <div class="card-header">
+                <h2><i data-lucide="pie-chart" style="color: var(--accent-cyan); width: 18px; height: 18px;"></i> Sector Sizing Allocation</h2>
+                <span class="subtitle">Exposure percentages</span>
+              </div>
+              <div class="chart-container">
+                <canvas id="sectorChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Risk Status -->
+            <div class="dashboard-card">
+              <div class="card-header">
+                <h2><i data-lucide="shield-check" style="color: var(--color-success); width: 18px; height: 18px;"></i> Stop Loss Risk Status</h2>
+                <span class="subtitle">Breached vs Safe tranches</span>
+              </div>
+              <div class="chart-container">
+                <canvas id="riskChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: DETAILED POSITIONS TABLE -->
+        <div id="positions" class="tab-pane">
+          <div class="dashboard-card">
+            
+            <!-- Table Search and Filters -->
+            <div class="table-filters">
+              <div class="search-input-wrapper">
+                <i data-lucide="search" style="width: 16px; height: 16px;"></i>
+                <input type="text" id="search-positions" placeholder="Search by Symbol or Sector...">
+              </div>
+              <div class="filter-selects">
+                <select id="filter-account">
+                  <option value="all">All Accounts</option>
+                </select>
+                <select id="filter-sector">
+                  <option value="all">All Sectors</option>
+                </select>
+                <select id="filter-status">
+                  <option value="all">All Risk Statuses</option>
+                  <option value="safe">Safe Positions</option>
+                  <option value="warning">Near Stop Loss</option>
+                  <option value="breached">Breached (SELL)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Interactive Scrollable Table -->
+            <div class="table-wrapper">
+              <table class="positions-table">
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Sector</th>
+                    <th>Shares</th>
+                    <th>Entry Price</th>
+                    <th>Current Price</th>
+                    <th>Trailing Stop</th>
+                    <th>Return ($)</th>
+                    <th>Return (%)</th>
+                    <th>Position Size</th>
+                    <th>Risk Status</th>
+                  </tr>
+                </thead>
+                <tbody id="positions-table-body">
+                  <!-- Dynamically populated via JS -->
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- TAB 3: NEWS & SENTIMENT -->
+        <div id="news" class="tab-pane">
+          <div class="dashboard-card" style="background: transparent; border: none; padding: 0;">
+            <div class="card-header" style="background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: 1rem; padding: 1rem 1.5rem; margin-bottom: 1.5rem;">
+              <h2><i data-lucide="newspaper" style="color: var(--accent-cyan); width: 18px; height: 18px;"></i> Contextual Financial Intelligence</h2>
+              <span class="subtitle">Synthesizing headlines with holdings sentiment</span>
+            </div>
+            <div class="news-grid" id="news-grid">
+              <!-- Dynamically populated via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: PORTFOLIO RISK STRESS SIMULATOR -->
+        <div id="simulator" class="tab-pane">
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h2><i data-lucide="sliders" style="color: var(--accent-cyan); width: 18px; height: 18px;"></i> Stress Test Scenario Simulator</h2>
+              <span class="subtitle">Model portfolio valuations under market distress</span>
+            </div>
+            
+            <div class="simulator-layout">
+              <!-- Simulation Parameters -->
+              <div class="simulator-controls" style="background: rgba(255, 255, 255, 0.01); padding: 1.25rem; border-radius: 0.75rem; border: 1px solid var(--border-glass);">
+                <h3 style="font-size: 1rem; margin-bottom: 1rem; font-family: var(--font-heading);">Simulation Parameters</h3>
+                
+                <div class="control-group">
+                  <label for="sim-target">Shift Target</label>
+                  <select id="sim-target">
+                    <!-- Loaded dynamically -->
+                  </select>
+                </div>
+
+                <div class="control-group" style="margin-top: 0.5rem;">
+                  <label for="sim-change-slider">
+                    <span>Target Movement</span>
+                    <span id="sim-change-val" style="color: var(--accent-cyan); font-weight: 700;">-10%</span>
+                  </label>
+                  <input type="range" id="sim-change-slider" min="-50" max="50" step="1" value="-10">
+                </div>
+
+                <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-glass); padding-top: 1rem; font-size: 0.8rem; color: var(--text-secondary);">
+                  <p><strong>How it works:</strong></p>
+                  <p style="margin-top: 0.25rem;">Shifting the <em>Entire Market</em> applies beta-weighted multipliers to each position. Sector or Symbol targets apply shifts directly. This models trailing stop exposures instantly.</p>
+                </div>
+              </div>
+
+              <!-- Simulation Output Values -->
+              <div class="sim-results" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div class="sim-grid">
+                  <!-- New Portfolio Value -->
+                  <div class="sim-stat-card">
+                    <h4>Simulated Portfolio Value</h4>
+                    <div class="val" id="sim-new-portfolio-val">$0.00</div>
+                  </div>
+
+                  <!-- Dollar Impact -->
+                  <div class="sim-stat-card">
+                    <h4>Simulated P&L Shift</h4>
+                    <div class="val" id="sim-pnl-impact">$0.00 (0.00%)</div>
+                  </div>
+                </div>
+
+                <!-- Stops triggered warning -->
+                <div class="sim-stat-card" style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <h4>Stop-Loss Breaches Triggered</h4>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Number of trailing stop-losses crossed during stress event.</p>
+                  </div>
+                  <div class="val" id="sim-triggered-stops" style="font-size: 1.8rem; font-family: var(--font-heading);">0 Stops Triggered</div>
+                </div>
+
+                <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.15); border-radius: 0.75rem; padding: 1rem; display: flex; gap: 0.75rem; align-items: flex-start; margin-top: 1rem;">
+                  <i data-lucide="shield-alert" style="color: var(--color-danger); flex-shrink: 0; width: 20px; height: 20px; margin-top: 0.125rem;"></i>
+                  <div>
+                    <span style="font-size: 0.85rem; font-weight: 600; color: #fff;">Risk Manager Tip</span>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Stops triggered in the simulator represent tranches that will require market sell orders to execute. Note symbols with low liquidity or high beta multipliers.</p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
