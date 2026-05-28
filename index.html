@@ -32,6 +32,7 @@
   </div>
 
   <div class="app-container">
+    <div class="overlay" id="mobile-overlay" style="display:none;"></div>
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="logo-container">
@@ -79,6 +80,9 @@
       
       <!-- Top header and CSV Uploader -->
       <header class="top-header">
+        <button id="mobile-nav-toggle" class="mobile-nav-toggle" aria-label="Toggle navigation" style="display:none;">
+          <i data-lucide="menu" style="width:18px; height:18px;"></i>
+        </button>
         <div class="header-title">
           <h1 id="tab-title-text">Risk Control Center</h1>
           <p id="tab-subtitle-text">Synthesizing real-time portfolio exposure, market trends, and stop-loss metrics.</p>
@@ -366,5 +370,29 @@
   </div>
 
   <script src="app.js"></script>
+  <script>
+    // Mobile sidebar toggle
+    document.addEventListener('DOMContentLoaded', function () {
+      try { lucide && lucide.createIcons(); } catch (e) {}
+      const toggle = document.getElementById('mobile-nav-toggle');
+      const container = document.querySelector('.app-container');
+      const overlay = document.getElementById('mobile-overlay');
+
+      if (!toggle || !container) return;
+
+      toggle.style.display = 'inline-flex';
+      toggle.addEventListener('click', () => {
+        container.classList.toggle('sidebar-open');
+        overlay.style.display = container.classList.contains('sidebar-open') ? 'block' : 'none';
+      });
+
+      if (overlay) {
+        overlay.addEventListener('click', () => {
+          container.classList.remove('sidebar-open');
+          overlay.style.display = 'none';
+        });
+      }
+    });
+  </script>
 </body>
 </html>
