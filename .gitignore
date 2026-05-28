@@ -12,3 +12,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Ignore sensitive portfolio export
+Positions - Portfolio.csv
